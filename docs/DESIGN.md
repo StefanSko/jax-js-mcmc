@@ -343,7 +343,103 @@ describe("HMC detailed balance", () => {
 });
 ```
 
-### Phase 2: Known Posterior Tests
+### Phase 1.5: Integrator Accuracy Tests (BlackJAX-inspired)
+
+These tests go beyond invariants and check that the numerical integrator tracks
+analytic trajectories on simple systems (a pattern used heavily in BlackJAX).
+They help catch sign errors, momentum updates, or step-size scaling mistakes.
+
+#### 1.5.1 Analytic Trajectory Checks
+
+```typescript
+// tests/physics/integrator-accuracy.test.ts
+describe("leapfrog integrator accuracy", () => {
+  test("harmonic oscillator matches analytic solution", () => {
+    // q(t) = sin(t), p(t) = cos(t) for unit mass/spring
+    const stepSize = 0.01;
+    const numSteps = 100;
+    const q0 = np.array([0.0]);
+    const p0 = np.array([1.0]);
+
+    const [q1, p1] = leapfrog(q0, p0, gradU, stepSize, numSteps);
+    expect(q1).toBeCloseTo(np.array([Math.sin(1.0)]), { tolerance: 1e-2 });
+    expect(p1).toBeCloseTo(np.array([Math.cos(1.0)]), { tolerance: 1e-2 });
+  });
+});
+```
+
+### Phase 2: Adaptation and Kernel Sanity (BlackJAX-inspired)
+
+BlackJAX tests spend a lot of effort ensuring adaptation and kernel plumbing
+behave sensibly. We mirror that with focused, low-cost checks.
+
+#### 2.1 Step Size Adaptation Sanity
+
+```typescript
+// tests/adaptation/step-size.test.ts
+describe("dual averaging step size", () => {
+  test("returns finite step size and responds to target accept rate", () => {
+    const stepA = findReasonableStepSize({ targetAcceptRate: 0.9 });
+    const stepB = findReasonableStepSize({ targetAcceptRate: 0.1 });
+
+    expect(Number.isFinite(stepA)).toBe(true);
+    expect(Number.isFinite(stepB)).toBe(true);
+    expect(stepA).not.toBe(stepB);
+  });
+});
+```
+
+#### 2.2 Warmup Regression Smoke Test
+
+Use a simple linear regression posterior (same pattern as BlackJAX) to verify
+that warmup returns usable parameters and sampling converges to known values.
+
+```typescript
+// tests/adaptation/warmup-regression.test.ts
+describe("windowed warmup on regression", () => {
+  test("recovers known coefficients", async () => {
+    const data = makeLinearData({ slope: 3.0, noise: 1.0 });
+    const result = await hmc(logProb, { numWarmup: 500, numSamples: 1000 });
+
+    const meanSlope = mean(result.draws.coefs);
+    expect(meanSlope).toBeCloseTo(3.0, { tolerance: 0.1 });
+  });
+});
+```
+
+#### 2.3 Kernel Smoke Test on Univariate Normal
+
+```typescript
+// tests/mcmc/univariate-normal.test.ts
+describe("HMC on N(0,1)", () => {
+  test("matches mean and variance", async () => {
+    const result = await hmc(normalLogProb, { numSamples: 6000, numWarmup: 1000 });
+    expect(mean(result.draws.x)).toBeCloseTo(0, { tolerance: 0.05 });
+    expect(variance(result.draws.x)).toBeCloseTo(1, { tolerance: 0.05 });
+  });
+});
+```
+
+#### 2.4 Compilation/Tracing Regression (if available)
+
+BlackJAX guards against accidental extra tracing/compilation. If jax-js exposes
+trace counters or cache stats, add a lightweight regression test to ensure
+`logProb` is only traced for init + kernel, not every sample.
+
+```typescript
+// tests/perf/compilation.test.ts
+describe("trace budget", () => {
+  test("logProb traced only for init + kernel", () => {
+    const traceCounter = instrumentTraceCounter();
+    const sampler = hmc(logProb, options);
+    runSteps(sampler, 10);
+
+    expect(traceCounter.count).toBeLessThanOrEqual(2);
+  });
+});
+```
+
+### Phase 3: Known Posterior Tests
 
 After physics tests pass, validate against posteriors with known analytical properties.
 
@@ -453,7 +549,7 @@ describe("banana posterior", () => {
 });
 ```
 
-### Phase 3: Blue/Green Reference Tests
+### Phase 4: Blue/Green Reference Tests
 
 Compare against established implementations (NumPyro, BlackJAX) on complex posteriors.
 
@@ -521,12 +617,19 @@ describe("blue/green: eight schools vs NumPyro", () => {
    ├── volume-preservation.test.ts
    └── detailed-balance.test.ts
 
-2. Known Posteriors (MUST PASS)
+2. Integrator Accuracy + Adaptation Sanity (MUST PASS)
+   ├── integrator-accuracy.test.ts
+   ├── step-size.test.ts
+   ├── warmup-regression.test.ts
+   ├── univariate-normal.test.ts
+   └── compilation.test.ts (if supported)
+
+3. Known Posteriors (MUST PASS)
    ├── multivariate-normal.test.ts
    ├── neals-funnel.test.ts
    └── banana.test.ts
 
-3. Reference Comparison (MUST PASS)
+4. Reference Comparison (MUST PASS)
    └── reference-comparison.test.ts
 ```
 
@@ -540,6 +643,11 @@ CI fails if any phase fails. Implementation proceeds only when physics tests pas
 | Reversibility | Exact | 1e-10 | Leapfrog correctness |
 | Volume preservation | det(J) = 1 | 1e-10 | Symplectic property |
 | Detailed balance | Metropolis rule | 5% | HMC correctness |
+| Integrator accuracy | Analytic dynamics | 1e-2 | Leapfrog correctness |
+| Step size adaptation | Target accept | Finite + monotone | Adaptation sanity |
+| Warmup regression | Synthetic linear | 10% | Warmup plumbing |
+| Univariate normal | Analytical | 5% | Kernel sanity |
+| Trace budget | Trace counter | <= 2 | Performance regression |
 | MVN mean | Analytical | 5% | Sampler accuracy |
 | MVN covariance | Analytical | 10% | Sampler accuracy |
 | Neal's funnel | Marginal v~N(0,3) | 10% | Adaptation quality |
