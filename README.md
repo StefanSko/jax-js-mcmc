@@ -30,7 +30,7 @@ defaultDevice("cpu");
 
 const logProb = (params: { x: Array }) => {
   // Return a scalar Array (0-dim), not a JS number.
-  return params.x.pow(2).mul(-0.5).sum();
+  return params.x.ref.mul(params.x).mul(-0.5).sum();
 };
 
 const result = await hmc(logProb, {
@@ -72,7 +72,7 @@ See `examples/browser` for a complete Vite setup.
       }
 
       const logProb = (params) =>
-        params.x.pow(2).mul(-0.5).sum();
+        params.x.ref.mul(params.x).mul(-0.5).sum();
 
       const result = await hmc(logProb, {
         numSamples: 500,
@@ -116,7 +116,7 @@ const { hmc } = await import("jax-js-mcmc");
 await init();
 defaultDevice("cpu");
 
-const logProb = (params) => params.x.pow(2).mul(-0.5).sum();
+const logProb = (params) => params.x.ref.mul(params.x).mul(-0.5).sum();
 const result = await hmc(logProb, {
   numSamples: 1000,
   numWarmup: 500,

@@ -17,7 +17,8 @@ async function run() {
     defaultDevice("cpu");
   }
 
-  const logProb = (params: { x: Array }) => params.x.pow(2).mul(-0.5).sum();
+  const logProb = (params: { x: Array }) =>
+    params.x.ref.mul(params.x).mul(-0.5).sum();
 
   const result = await hmc(logProb, {
     numSamples: 500,

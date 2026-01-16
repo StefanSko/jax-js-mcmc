@@ -5,5 +5,7 @@ export default defineConfig({
     environment: "node",
     testTimeout: 60000,
     hookTimeout: 60000,
+    maxThreads: 1,
+    minThreads: 1,
   },
 });

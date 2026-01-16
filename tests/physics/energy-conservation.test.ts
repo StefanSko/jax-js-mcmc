@@ -8,13 +8,13 @@ beforeAll(async () => {
   if (devices.includes("cpu")) defaultDevice("cpu");
 });
 
-const logProb = (q: Array) => q.mul(q).mul(-0.5).sum();
+const logProb = (q: Array) => q.ref.mul(q).mul(-0.5).sum();
 const gradLogProb = grad(logProb) as (q: Array) => Array;
 
 function measureEnergyDrift(stepSize: number, numSteps: number): number {
   const q0 = np.array([1.0, 0.5]);
   const p0 = np.array([0.0, 1.0]);
-  const massMatrix = np.onesLike(q0);
+  const massMatrix = np.onesLike(q0.ref);
   const H0 = hamiltonian(q0, p0, logProb, massMatrix);
   const [q1, p1] = leapfrog(q0, p0, gradLogProb, stepSize, numSteps, massMatrix);
   const H1 = hamiltonian(q1, p1, logProb, massMatrix);
@@ -32,7 +32,9 @@ describe("leapfrog energy conservation", () => {
   test("energy drift scales quadratically with step size", () => {
     const stepSizes = [0.1, 0.05, 0.025];
     const drifts = stepSizes.map((eps) => measureEnergyDrift(eps, 100));
-    expect(drifts[1] / drifts[0]).toBeCloseTo(0.25, { tolerance: 0.2 });
-    expect(drifts[2] / drifts[1]).toBeCloseTo(0.25, { tolerance: 0.2 });
+    const ratio1 = drifts[1] / drifts[0];
+    const ratio2 = drifts[2] / drifts[1];
+    expect(Math.abs(ratio1 - 0.25)).toBeLessThan(0.2);
+    expect(Math.abs(ratio2 - 0.25)).toBeLessThan(0.2);
   });
 });

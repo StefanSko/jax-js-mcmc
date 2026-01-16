@@ -2,7 +2,14 @@ import type { Array, JsTree } from "@jax-js/jax";
 import { numpy as np, grad } from "@jax-js/jax";
 import { leapfrog } from "./leapfrog";
 import { hamiltonian } from "./hamiltonian";
-import { mapTree, treeOnesLike, treeZerosLike } from "./tree-utils";
+import {
+  mapTree,
+  treeClone,
+  treeDispose,
+  treeOnesLike,
+  treeRef,
+  treeZerosLike,
+} from "./tree-utils";
 import { sampleNormalTree } from "./random-utils";
 
 export interface DualAverageState {
@@ -77,22 +84,22 @@ export function updateMassMatrix<Params extends JsTree<Array>>(
 ): MassMatrixState<Params> {
   const count = state.count + 1;
   const delta = mapTree(
-    (x: Array, mean: Array) => x.sub(mean),
-    sample,
+    (x: Array, mean: Array) => x.sub(mean.ref),
+    treeRef(sample),
     state.mean,
   ) as Params;
   const mean = mapTree(
-    (mean: Array, d: Array) => mean.add(d.div(count)),
+    (mean: Array, d: Array) => mean.add(d.ref.div(count)),
     state.mean,
     delta,
   ) as Params;
   const delta2 = mapTree(
-    (x: Array, meanNow: Array) => x.sub(meanNow),
-    sample,
+    (x: Array, meanNow: Array) => x.sub(meanNow.ref),
+    treeRef(sample),
     mean,
   ) as Params;
   const m2 = mapTree(
-    (m2: Array, d1: Array, d2: Array) => m2.add(d1.mul(d2)),
+    (m2: Array, d1: Array, d2: Array) => m2.add(d1.ref.mul(d2.ref)),
     state.m2,
     delta,
     delta2,
@@ -123,17 +130,20 @@ function computeAcceptProb<Params extends JsTree<Array>>(
   numSteps: number,
   massMatrix: Params,
 ): number {
+  const h0 = hamiltonian(position, momentum, logProb, massMatrix);
   const [qNew, pNew] = leapfrog(
-    position,
+    treeClone(position),
     momentum,
     gradLogProb,
     stepSize,
     numSteps,
     massMatrix,
   );
-  const h0 = hamiltonian(position, momentum, logProb, massMatrix);
   const h1 = hamiltonian(qNew, pNew, logProb, massMatrix);
   const logAccept = h0.sub(h1).item();
+  treeDispose(position);
+  treeDispose(qNew);
+  treeDispose(pNew);
   return Math.min(1, Math.exp(logAccept));
 }
 
@@ -153,14 +163,14 @@ export function findReasonableStepSize<Params extends JsTree<Array>>(
     const { nextKey, sample } = sampleNormalTree(currentKey, massMatrix);
     currentKey = nextKey;
     const momentum = mapTree(
-      (z: Array, m: Array) => z.mul(np.sqrt(m)),
+      (z: Array, m: Array) => z.mul(np.sqrt(m.ref)),
       sample,
       massMatrix,
     ) as Params;
     const acceptProb = computeAcceptProb(
       logProb,
       gradLogProb,
-      position,
+      treeClone(position),
       momentum,
       stepSize,
       1,

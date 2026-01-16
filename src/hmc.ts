@@ -11,7 +11,7 @@ import {
   updateMassMatrix,
   finalizeMassMatrix,
 } from "./adaptation";
-import { mapTree, stackTrees } from "./tree-utils";
+import { mapTree, stackTrees, treeClone, treeDispose, treeRef } from "./tree-utils";
 import { splitKeys, sampleNormalTree } from "./random-utils";
 
 export interface HMCOptions<Params extends JsTree<Array>> {
@@ -48,7 +48,7 @@ function sampleMomentum<Params extends JsTree<Array>>(
 ): { nextKey: Array; momentum: Params } {
   const { nextKey, sample } = sampleNormalTree(key, massMatrix);
   const momentum = mapTree(
-    (z: Array, m: Array) => z.mul(np.sqrt(m)),
+    (z: Array, m: Array) => z.mul(np.sqrt(m.ref)),
     sample,
     massMatrix,
   ) as Params;
@@ -75,7 +75,7 @@ async function runChain<Params extends JsTree<Array>>(
   } = options;
 
   let key = chainKey;
-  let position = options.initialParams;
+  let position = treeClone(options.initialParams);
   const gradLogProb = grad(logProb) as (p: Params) => Params;
 
   let massMatrix = initMassMatrix(position);
@@ -84,7 +84,7 @@ async function runChain<Params extends JsTree<Array>>(
   if (numWarmup > 0) {
     const stepInit = findReasonableStepSize(
       logProb,
-      position,
+      treeClone(position),
       massMatrix,
       initialStepSize,
       key,
@@ -109,11 +109,11 @@ async function runChain<Params extends JsTree<Array>>(
 
     const { momentum } = sampleMomentum(momentumKey, massMatrix);
 
-    const logProbCurrent = logProb(position);
-    const kineticCurrent = kineticEnergy(momentum, massMatrix);
+    const logProbCurrent = logProb(treeClone(position));
+    const kineticCurrent = kineticEnergy(treeRef(momentum), massMatrix);
 
     const [proposalQ, proposalP] = leapfrog(
-      position,
+      treeClone(position),
       momentum,
       gradLogProb,
       stepSize,
@@ -121,7 +121,7 @@ async function runChain<Params extends JsTree<Array>>(
       massMatrix,
     );
 
-    const logProbProposal = logProb(proposalQ);
+    const logProbProposal = logProb(treeClone(proposalQ));
     const kineticProposal = kineticEnergy(proposalP, massMatrix);
 
     const logAccept = logProbProposal
@@ -134,7 +134,10 @@ async function runChain<Params extends JsTree<Array>>(
     const accepted = u < acceptProb;
 
     if (accepted) {
+      treeDispose(position);
       position = proposalQ;
+    } else {
+      treeDispose(proposalQ);
     }
 
     if (iter < numWarmup) {
@@ -153,13 +156,15 @@ async function runChain<Params extends JsTree<Array>>(
       }
     } else {
       if (accepted) acceptCount++;
-      samples.push(position);
+      samples.push(treeClone(position));
     }
+
   }
 
   const acceptRate = numSamples > 0 ? acceptCount / numSamples : 0;
   const draws = stackTrees(samples, 0);
 
+  treeDispose(position);
   return { draws, acceptRate, stepSize, massMatrix };
 }
 

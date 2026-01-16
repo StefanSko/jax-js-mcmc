@@ -21,22 +21,23 @@ const sigma = np.array([15, 10, 16, 11, 9, 11, 10, 18]);
 const logProb = (p: { mu: Array; logTau: Array; eta: Array }) => {
   const mu = p.mu;
   const tau = np.exp(p.logTau);
-  const theta = mu.add(tau.mul(p.eta));
+  const theta = mu.ref.add(tau.ref.mul(p.eta));
 
-  const logLik = theta
-    .sub(y)
-    .pow(2)
-    .div(sigma.pow(2))
+  const resid = theta.sub(y);
+  const logLik = resid.ref
+    .mul(resid.ref)
+    .div(sigma.ref.mul(sigma.ref))
     .mul(-0.5)
     .sub(np.log(sigma))
     .sum();
 
-  const logPriorMu = mu.pow(2).div(25).mul(-0.5).sum();
+  const logPriorMu = mu.ref.mul(mu.ref).div(25).mul(-0.5).sum();
   const tauScale = 5;
   const normalizer = np.array(2 / (Math.PI * tauScale));
-  const denom = np.array(1).add(tau.div(tauScale).pow(2));
+  const scaledTau = tau.ref.div(tauScale);
+  const denom = np.array(1).add(scaledTau.ref.mul(scaledTau.ref));
   const logPriorTau = np.log(normalizer).sub(np.log(denom)).sum();
-  const logPriorEta = p.eta.pow(2).mul(-0.5).sum();
+  const logPriorEta = p.eta.ref.mul(p.eta.ref).mul(-0.5).sum();
 
   // Jacobian for tau = exp(logTau)
   const logJac = p.logTau.sum();
@@ -66,8 +67,8 @@ describe("blue/green: eight schools vs NumPyro", () => {
     const tau = np.exp(result.draws.logTau);
     const stats = summary({ mu: result.draws.mu, tau });
 
-    expect(stats.mu.mean).toBeCloseTo(reference.mu.mean, { tolerance: 0.15 });
-    expect(stats.mu.sd).toBeCloseTo(reference.mu.std, { tolerance: 0.15 });
+    expect(Math.abs(stats.mu.mean - reference.mu.mean)).toBeLessThanOrEqual(0.15);
+    expect(Math.abs(stats.mu.sd - reference.mu.std)).toBeLessThanOrEqual(0.15);
   });
 
   testFn("tau matches NumPyro reference within 15%", async () => {
@@ -87,7 +88,7 @@ describe("blue/green: eight schools vs NumPyro", () => {
     const tau = np.exp(result.draws.logTau);
     const stats = summary({ mu: result.draws.mu, tau });
 
-    expect(stats.tau.mean).toBeCloseTo(reference.tau.mean, { tolerance: 0.15 });
-    expect(stats.tau.sd).toBeCloseTo(reference.tau.std, { tolerance: 0.15 });
+    expect(Math.abs(stats.tau.mean - reference.tau.mean)).toBeLessThanOrEqual(0.15);
+    expect(Math.abs(stats.tau.sd - reference.tau.std)).toBeLessThanOrEqual(0.15);
   });
 });
