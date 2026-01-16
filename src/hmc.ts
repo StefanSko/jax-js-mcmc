@@ -41,6 +41,17 @@ export interface HMCResult<T extends JsTree<np.Array>> {
 }
 
 /**
+ * Extract individual PRNG keys from a stacked key array.
+ */
+function extractKeys(keysArray: np.Array, count: number): np.Array[] {
+  const keys: np.Array[] = [];
+  for (let i = 0; i < count; i++) {
+    keys.push(keysArray.ref.slice([i, i + 1]).reshape([2]));
+  }
+  return keys;
+}
+
+/**
  * Run HMC sampling on a log probability function.
  *
  * @param logProb The log probability function (must return scalar Array)
@@ -69,15 +80,10 @@ export async function hmc<T extends JsTree<np.Array>>(
 
   // Split key for chains
   const chainKeys = random.split(key, numChains);
+  const keyList = extractKeys(chainKeys, numChains);
 
   // Run each chain
   const chainResults: { draws: np.Array; acceptRate: number; stepSize: number }[] = [];
-
-  // Extract keys using slice + reshape (use .ref to preserve chainKeys across iterations)
-  const keyList: np.Array[] = [];
-  for (let i = 0; i < numChains; i++) {
-    keyList.push(chainKeys.ref.slice([i, i + 1]).reshape([2]));
-  }
 
   for (let chainIdx = 0; chainIdx < numChains; chainIdx++) {
     const chainKey = keyList[chainIdx];
@@ -309,40 +315,26 @@ function sampleMomentum<T extends JsTree<np.Array>>(
   key: np.Array,
   massMatrix?: T,
 ): T {
-  // Get the leaves to count how many keys we need
   const [leaves] = tree.flatten(tree.ref(params) as JsTree<np.Array>);
   const numLeaves = (leaves as np.Array[]).length;
   const keysArray = random.split(key, numLeaves);
-
-  // Pre-extract keys to avoid issues with side effects in tree.map
-  // Use .ref to preserve keysArray across iterations
-  const extractedKeys: np.Array[] = [];
-  for (let i = 0; i < numLeaves; i++) {
-    extractedKeys.push(keysArray.ref.slice([i, i + 1]).reshape([2]));
-  }
+  const extractedKeys = extractKeys(keysArray, numLeaves);
 
   let keyIdx = 0;
   if (massMatrix === undefined) {
-    // Sample from N(0, I) with same structure as params
     return tree.map(
-      (leaf: np.Array) => {
-        const k = extractedKeys[keyIdx++];
-        return random.normal(k, leaf.shape);
-      },
+      (leaf: np.Array) => random.normal(extractedKeys[keyIdx++], leaf.shape),
       tree.ref(params) as JsTree<np.Array>,
-    ) as T;
-  } else {
-    // Sample from N(0, diag(massMatrix))
-    // p ~ sqrt(M) * z where z ~ N(0, I)
-    return tree.map(
-      (leaf: np.Array, m: np.Array) => {
-        const k = extractedKeys[keyIdx++];
-        return random.normal(k, leaf.shape).mul(np.sqrt(m));
-      },
-      tree.ref(params) as JsTree<np.Array>,
-      tree.ref(massMatrix) as JsTree<np.Array>,
     ) as T;
   }
+
+  // Sample from N(0, diag(massMatrix)): p ~ sqrt(M) * z where z ~ N(0, I)
+  return tree.map(
+    (leaf: np.Array, m: np.Array) =>
+      random.normal(extractedKeys[keyIdx++], leaf.shape).mul(np.sqrt(m)),
+    tree.ref(params) as JsTree<np.Array>,
+    tree.ref(massMatrix) as JsTree<np.Array>,
+  ) as T;
 }
 
 /**
@@ -358,32 +350,39 @@ function hamiltonian<T extends JsTree<np.Array>>(
   const U = logProb(position).mul(-1);
 
   // K(p) = 0.5 * sum(p^2 / M) or 0.5 * sum(p^2)
-  // We need to sum over all leaves
+  const K = computeKineticEnergy(momentum, massMatrix);
+
+  return U.add(K);
+}
+
+/**
+ * Compute kinetic energy K = 0.5 * sum(p^2 / M)
+ * If massMatrix is undefined, uses identity (K = 0.5 * sum(p^2))
+ */
+function computeKineticEnergy<T extends JsTree<np.Array>>(
+  momentum: T,
+  massMatrix?: T,
+): np.Array {
   const [momentumLeaves] = tree.flatten(tree.ref(momentum) as JsTree<np.Array>);
   const pLeaves = momentumLeaves as np.Array[];
 
-  let K: np.Array;
   if (massMatrix === undefined) {
-    // K = 0.5 * sum(p^2)
     let total = np.array(0);
     for (const p of pLeaves) {
       total = total.add(p.ref.mul(p).sum());
     }
-    K = total.mul(0.5);
-  } else {
-    // K = 0.5 * sum(p^2 / M)
-    const [massLeaves] = tree.flatten(tree.ref(massMatrix) as JsTree<np.Array>);
-    const mLeaves = massLeaves as np.Array[];
-    let total = np.array(0);
-    for (let i = 0; i < pLeaves.length; i++) {
-      const p = pLeaves[i];
-      const m = mLeaves[i];
-      total = total.add(p.ref.mul(p).div(m).sum());
-    }
-    K = total.mul(0.5);
+    return total.mul(0.5);
   }
 
-  return U.add(K);
+  const [massLeaves] = tree.flatten(tree.ref(massMatrix) as JsTree<np.Array>);
+  const mLeaves = massLeaves as np.Array[];
+  let total = np.array(0);
+  for (let i = 0; i < pLeaves.length; i++) {
+    const p = pLeaves[i];
+    const m = mLeaves[i];
+    total = total.add(p.ref.mul(p).div(m).sum());
+  }
+  return total.mul(0.5);
 }
 
 /**

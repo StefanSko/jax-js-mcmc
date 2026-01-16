@@ -2,6 +2,48 @@ import { numpy as np, tree } from "@jax-js/jax";
 import type { JsTree, GradLogProbFn } from "./types";
 
 /**
+ * Update position: q = q + eps * M^{-1} * p
+ */
+function updatePosition<T extends JsTree<np.Array>>(
+  q: T,
+  p: T,
+  stepSize: number,
+  massMatrix?: T,
+): T {
+  if (massMatrix === undefined) {
+    return tree.map(
+      (qLeaf: np.Array, pLeaf: np.Array) => qLeaf.add(pLeaf.mul(stepSize)),
+      tree.ref(q) as JsTree<np.Array>,
+      tree.ref(p) as JsTree<np.Array>,
+    ) as T;
+  }
+
+  return tree.map(
+    (qLeaf: np.Array, pLeaf: np.Array, mLeaf: np.Array) =>
+      qLeaf.add(pLeaf.div(mLeaf).mul(stepSize)),
+    tree.ref(q) as JsTree<np.Array>,
+    tree.ref(p) as JsTree<np.Array>,
+    tree.ref(massMatrix) as JsTree<np.Array>,
+  ) as T;
+}
+
+/**
+ * Update momentum: p = p + eps * grad_logProb(q)
+ */
+function updateMomentum<T extends JsTree<np.Array>>(
+  p: T,
+  grad: T,
+  stepSize: number,
+): T {
+  return tree.map(
+    (pLeaf: np.Array, gradLeaf: np.Array) =>
+      pLeaf.add(gradLeaf.mul(stepSize)),
+    tree.ref(p) as JsTree<np.Array>,
+    tree.ref(grad) as JsTree<np.Array>,
+  ) as T;
+}
+
+/**
  * Leapfrog integrator for Hamiltonian dynamics.
  *
  * Implements the symplectic integrator:
@@ -29,56 +71,22 @@ export function leapfrog<T extends JsTree<np.Array>>(
   numSteps: number,
   massMatrix?: T,
 ): [T, T] {
-  // CRITICAL: Move semantics
-  // - position and momentum will be reassigned in loop
-  // - Use tree.ref() when values need to survive operations
-  // - gradLogProb returns arrays that may share underlying storage across calls
-  //   MUST use tree.ref() on gradient result before passing to tree.map
-
   let q = position;
   let p = momentum;
 
-  // Half step momentum: p = p + (eps/2) * grad_logProb(q)
+  // Half step momentum
   const gradInitial = gradLogProb(tree.ref(q) as T);
-
-  p = tree.map(
-    (pLeaf: np.Array, gradLeaf: np.Array) =>
-      pLeaf.add(gradLeaf.mul(stepSize * 0.5)),
-    tree.ref(p) as JsTree<np.Array>,
-    tree.ref(gradInitial) as JsTree<np.Array>, // CRITICAL: use tree.ref on gradient!
-  ) as T;
+  p = updateMomentum(p, gradInitial, stepSize * 0.5);
 
   // Main leapfrog loop
   for (let i = 0; i < numSteps; i++) {
-    // Full step position: q = q + eps * M^{-1} * p
-    if (massMatrix === undefined) {
-      // Identity mass matrix: M^{-1} = I, so just q = q + eps * p
-      q = tree.map(
-        (qLeaf: np.Array, pLeaf: np.Array) => qLeaf.add(pLeaf.mul(stepSize)),
-        tree.ref(q) as JsTree<np.Array>,
-        tree.ref(p) as JsTree<np.Array>,
-      ) as T;
-    } else {
-      // Diagonal mass matrix: M^{-1} * p = p / M (elementwise)
-      q = tree.map(
-        (qLeaf: np.Array, pLeaf: np.Array, mLeaf: np.Array) =>
-          qLeaf.add(pLeaf.div(mLeaf).mul(stepSize)),
-        tree.ref(q) as JsTree<np.Array>,
-        tree.ref(p) as JsTree<np.Array>,
-        tree.ref(massMatrix) as JsTree<np.Array>,
-      ) as T;
-    }
+    // Full step position
+    q = updatePosition(q, p, stepSize, massMatrix);
 
     // Momentum step: full step for all but last iteration, half step for last
     const gradCurrent = gradLogProb(tree.ref(q) as T);
     const momentumStepSize = i === numSteps - 1 ? stepSize * 0.5 : stepSize;
-
-    p = tree.map(
-      (pLeaf: np.Array, gradLeaf: np.Array) =>
-        pLeaf.add(gradLeaf.mul(momentumStepSize)),
-      tree.ref(p) as JsTree<np.Array>,
-      tree.ref(gradCurrent) as JsTree<np.Array>, // CRITICAL: use tree.ref on gradient!
-    ) as T;
+    p = updateMomentum(p, gradCurrent, momentumStepSize);
   }
 
   return [q, p];

@@ -5,6 +5,28 @@
  */
 
 /**
+ * Compute mean of an array.
+ */
+function mean(values: number[]): number {
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+/**
+ * Compute variance of an array (sample variance with n-1 denominator).
+ */
+function variance(values: number[], meanValue?: number): number {
+  const m = meanValue ?? mean(values);
+  return values.reduce((a, b) => a + (b - m) ** 2, 0) / (values.length - 1);
+}
+
+/**
+ * Compute quantile of a sorted array.
+ */
+function quantile(sorted: number[], q: number): number {
+  return sorted[Math.floor(sorted.length * q)];
+}
+
+/**
  * Compute split R-hat (Gelman-Rubin statistic) for convergence diagnostics.
  *
  * R-hat compares within-chain and between-chain variance to assess convergence.
@@ -27,38 +49,26 @@ export function rhat(draws: number[][]): number {
   const numChains = splitChains.length;
   const n = splitChains[0].length;
 
-  // Compute chain means
-  const chainMeans = splitChains.map(
-    (chain) => chain.reduce((a, b) => a + b, 0) / chain.length,
-  );
-
-  // Compute overall mean
-  const overallMean = chainMeans.reduce((a, b) => a + b, 0) / numChains;
+  // Compute chain means and overall mean
+  const chainMeans = splitChains.map(mean);
+  const overallMean = mean(chainMeans);
 
   // Compute between-chain variance B
   let B = 0;
-  for (const mean of chainMeans) {
-    B += (mean - overallMean) ** 2;
+  for (const m of chainMeans) {
+    B += (m - overallMean) ** 2;
   }
   B = (B * n) / (numChains - 1);
 
   // Compute within-chain variance W
   let W = 0;
   for (let i = 0; i < numChains; i++) {
-    const chain = splitChains[i];
-    const mean = chainMeans[i];
-    let s2 = 0;
-    for (const x of chain) {
-      s2 += (x - mean) ** 2;
-    }
-    W += s2 / (n - 1);
+    W += variance(splitChains[i], chainMeans[i]);
   }
   W /= numChains;
 
-  // Compute pooled variance estimate
+  // Compute pooled variance estimate and R-hat
   const varPlus = ((n - 1) / n) * W + B / n;
-
-  // R-hat is sqrt(varPlus / W)
   return Math.sqrt(varPlus / W);
 }
 
@@ -72,42 +82,30 @@ export function rhat(draws: number[][]): number {
  */
 export function ess(draws: number[][]): number {
   // Flatten all chains
-  const allSamples: number[] = [];
-  for (const chain of draws) {
-    allSamples.push(...chain);
-  }
-
+  const allSamples = draws.flat();
   const n = allSamples.length;
-  const mean = allSamples.reduce((a, b) => a + b, 0) / n;
+  const sampleMean = mean(allSamples);
+  const sampleVariance = variance(allSamples, sampleMean);
 
-  // Compute variance
-  let variance = 0;
-  for (const x of allSamples) {
-    variance += (x - mean) ** 2;
-  }
-  variance /= n - 1;
-
-  if (variance < 1e-10) {
+  if (sampleVariance < 1e-10) {
     return n; // No variance, all samples are the same
   }
 
-  // Compute autocorrelation using FFT-like approach
-  // For simplicity, use direct computation up to maxLag
+  // Compute autocorrelation up to maxLag
   const maxLag = Math.min(n - 1, Math.floor(n / 2));
   const rho: number[] = [];
 
   for (let lag = 0; lag <= maxLag; lag++) {
     let autocorr = 0;
     for (let i = 0; i < n - lag; i++) {
-      autocorr += (allSamples[i] - mean) * (allSamples[i + lag] - mean);
+      autocorr += (allSamples[i] - sampleMean) * (allSamples[i + lag] - sampleMean);
     }
-    rho.push(autocorr / (n * variance));
+    rho.push(autocorr / (n * sampleVariance));
   }
 
   // Geyer's initial monotone sequence estimator
   // Sum pairs of consecutive autocorrelations until they become negative
-  let essSum = rho[0]; // Start with rho(0) = 1
-
+  let essSum = rho[0];
   for (let t = 1; t < maxLag - 1; t += 2) {
     const pairSum = rho[t] + rho[t + 1];
     if (pairSum < 0) {
@@ -116,10 +114,23 @@ export function ess(draws: number[][]): number {
     essSum += 2 * pairSum;
   }
 
-  // ESS = n / (1 + 2 * sum of autocorrelations)
-  const effectiveSampleSize = n / essSum;
+  return Math.max(1, n / essSum);
+}
 
-  return Math.max(1, effectiveSampleSize);
+/**
+ * Summary statistics for a single parameter.
+ */
+interface ParamSummary {
+  name: string;
+  mean: number;
+  std: number;
+  q5: number;
+  q25: number;
+  q50: number;
+  q75: number;
+  q95: number;
+  rhat: number;
+  ess: number;
 }
 
 /**
@@ -132,84 +143,38 @@ export function ess(draws: number[][]): number {
 export function summary(
   draws: number[][][],
   paramNames?: string[],
-): {
-  params: Array<{
-    name: string;
-    mean: number;
-    std: number;
-    q5: number;
-    q25: number;
-    q50: number;
-    q75: number;
-    q95: number;
-    rhat: number;
-    ess: number;
-  }>;
-} {
+): { params: ParamSummary[] } {
   const numChains = draws.length;
-  const numSamples = draws[0].length;
   const numParams = draws[0][0].length;
 
-  const params: Array<{
-    name: string;
-    mean: number;
-    std: number;
-    q5: number;
-    q25: number;
-    q50: number;
-    q75: number;
-    q95: number;
-    rhat: number;
-    ess: number;
-  }> = [];
+  const params: ParamSummary[] = [];
 
   for (let p = 0; p < numParams; p++) {
     // Extract draws for this parameter across all chains
     const paramDraws: number[][] = [];
     for (let c = 0; c < numChains; c++) {
-      const chainDraws: number[] = [];
-      for (let s = 0; s < numSamples; s++) {
-        chainDraws.push(draws[c][s][p]);
-      }
-      paramDraws.push(chainDraws);
+      paramDraws.push(draws[c].map((sample) => sample[p]));
     }
 
-    // Flatten for summary statistics
-    const allDraws: number[] = [];
-    for (const chain of paramDraws) {
-      allDraws.push(...chain);
-    }
-
-    // Compute statistics
-    const n = allDraws.length;
-    const mean = allDraws.reduce((a, b) => a + b, 0) / n;
-    const std = Math.sqrt(
-      allDraws.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1),
-    );
+    // Flatten and compute statistics
+    const allDraws = paramDraws.flat();
+    const paramMean = mean(allDraws);
+    const std = Math.sqrt(variance(allDraws, paramMean));
 
     // Quantiles
     const sorted = [...allDraws].sort((a, b) => a - b);
-    const q5 = sorted[Math.floor(n * 0.05)];
-    const q25 = sorted[Math.floor(n * 0.25)];
-    const q50 = sorted[Math.floor(n * 0.5)];
-    const q75 = sorted[Math.floor(n * 0.75)];
-    const q95 = sorted[Math.floor(n * 0.95)];
-
-    // Diagnostics
-    const paramRhat = rhat(paramDraws);
-    const paramEss = ess(paramDraws);
 
     params.push({
       name: paramNames?.[p] ?? `param_${p}`,
-      mean,
+      mean: paramMean,
       std,
-      q5,
-      q25,
-      q50,
-      q75,
-      q95,
-      rhat: paramRhat,
-      ess: paramEss,
+      q5: quantile(sorted, 0.05),
+      q25: quantile(sorted, 0.25),
+      q50: quantile(sorted, 0.5),
+      q75: quantile(sorted, 0.75),
+      q95: quantile(sorted, 0.95),
+      rhat: rhat(paramDraws),
+      ess: ess(paramDraws),
     });
   }
 
