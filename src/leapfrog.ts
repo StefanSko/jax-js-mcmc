@@ -1,45 +1,33 @@
-export type Vector = number[];
+import { tree } from "@jax-js/jax";
+
+import { treeAdd, treeMul, treeOnesLike, treeScale, type PyTree } from "./tree";
 
 export function leapfrog(
-  position: Vector,
-  momentum: Vector,
-  gradPotential: (q: Vector) => Vector,
+  position: PyTree,
+  momentum: PyTree,
+  gradPotential: (q: PyTree) => PyTree,
   stepSize: number,
   numSteps: number,
-): [Vector, Vector] {
-  const q = position.slice();
-  const p = momentum.slice();
-
-  if (q.length !== p.length) {
-    throw new Error("position and momentum must have the same length");
-  }
+  inverseMassMatrix?: PyTree,
+): [PyTree, PyTree] {
   if (numSteps <= 0 || stepSize === 0) {
-    return [q, p];
+    return [position, momentum];
   }
 
-  let grad = gradPotential(q);
-  if (grad.length !== q.length) {
-    throw new Error("gradPotential must return a vector of the same length");
-  }
+  let q = position;
+  let p = momentum;
+  const invMass = inverseMassMatrix ?? treeOnesLike(position);
 
-  for (let i = 0; i < p.length; i += 1) {
-    p[i] -= 0.5 * stepSize * grad[i];
-  }
+  let grad = gradPotential(tree.ref(q) as PyTree);
+  p = treeAdd(p, treeScale(grad, -0.5 * stepSize));
 
   for (let step = 0; step < numSteps; step += 1) {
-    for (let i = 0; i < q.length; i += 1) {
-      q[i] += stepSize * p[i];
-    }
+    const velocity = treeMul(invMass, p);
+    q = treeAdd(q, treeScale(velocity, stepSize));
 
-    grad = gradPotential(q);
-    if (grad.length !== q.length) {
-      throw new Error("gradPotential must return a vector of the same length");
-    }
-
-    const scale = step === numSteps - 1 ? 0.5 : 1.0;
-    for (let i = 0; i < p.length; i += 1) {
-      p[i] -= scale * stepSize * grad[i];
-    }
+    grad = gradPotential(tree.ref(q) as PyTree);
+    const scale = step === numSteps - 1 ? -0.5 * stepSize : -1.0 * stepSize;
+    p = treeAdd(p, treeScale(grad, scale));
   }
 
   return [q, p];

@@ -9,7 +9,11 @@
     "test:watch": "vitest",
     "test:physics": "vitest run tests/physics"
   },
+  "peerDependencies": {
+    "@jax-js/jax": ">=0.1.0"
+  },
   "devDependencies": {
+    "@jax-js/jax": "^0.1.0",
     "@types/node": "^20.11.30",
     "typescript": "^5.4.5",
     "vitest": "^4.0.17"

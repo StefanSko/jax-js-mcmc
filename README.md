@@ -10,6 +10,8 @@ HMC sampling library for [jax-js](https://github.com/ekzhang/jax-js) - Bayesian 
 
 A standalone MCMC sampling library for jax-js. Provides HMC sampling with automatic step size adaptation for any differentiable log probability function.
 
+Requires `@jax-js/jax` as a peer dependency.
+
 ```typescript
 import { hmc } from "jax-js-mcmc";
 import { numpy as np, random } from "@jax-js/jax";
@@ -26,12 +28,23 @@ const result = await hmc(logProb, {
 });
 ```
 
-## Features (Planned)
+## Features
 
 - HMC with dual averaging step size adaptation
-- Diagonal mass matrix adaptation
+- Diagonal mass matrix adaptation with windowed warmup
+- Multi-chain sampling
 - Diagnostics: R-hat, ESS, summary statistics
 - Physics-based TDD validation
+
+## Diagnostics
+
+```typescript
+import { ess, rhat, summary } from "jax-js-mcmc";
+
+const stats = summary(result.draws);
+const rhatValue = rhat(result.draws.x);
+const essValue = ess(result.draws.x);
+```
 
 ## Related
 

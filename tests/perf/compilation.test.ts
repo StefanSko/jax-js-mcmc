@@ -1,3 +1,3 @@
 import { test } from "vitest";
 
-test.todo("logProb tracing budget stays within init + kernel");
+test.skip("requires jax-js trace counters to assert compilation budget");
