@@ -33,6 +33,6 @@ describe("diagnostics", () => {
       [0, 1, 2, 3],
     ]);
     const stats = summary({ x: draws });
-    expect(stats.x.mean).toBeCloseTo(1.5, { tolerance: 1e-6 });
+    expect(Math.abs(stats.x.mean - 1.5)).toBeLessThanOrEqual(1e-6);
   });
 });

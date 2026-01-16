@@ -17,7 +17,7 @@ beforeAll(async () => {
   if (devices.includes("cpu")) defaultDevice("cpu");
 });
 
-const logProb = (q: Array) => q.mul(q).mul(-0.5).sum();
+const logProb = (q: Array) => q.ref.mul(q).mul(-0.5).sum();
 const gradLogProb = grad(logProb) as (q: Array) => Array;
 
 describe("HMC detailed balance", () => {
@@ -25,8 +25,8 @@ describe("HMC detailed balance", () => {
     const numTrials = 5000;
     const stepSize = 0.25;
     const numSteps = 10;
-    const q0 = np.array([0.1]);
-    const massMatrix = np.onesLike(q0);
+    const q0Base = np.array([0.1]);
+    const massMatrix = np.onesLike(q0Base.ref);
 
     let key = random.key(0);
     const binEdges = [0, 0.1, 0.2, 0.5, 1, 2, 4];
@@ -42,11 +42,13 @@ describe("HMC detailed balance", () => {
 
       const { sample: z } = sampleNormalTree(momentumKey, massMatrix);
       const momentum = mapTree(
-        (zi: Array, m: Array) => zi.mul(np.sqrt(m)),
+        (zi: Array, m: Array) => zi.mul(np.sqrt(m.ref)),
         z,
         massMatrix,
       ) as Array;
 
+      const q0 = q0Base.ref;
+      const h0 = hamiltonian(q0Base.ref, momentum, logProb, massMatrix);
       const [q1, p1] = leapfrog(
         q0,
         momentum,
@@ -55,8 +57,6 @@ describe("HMC detailed balance", () => {
         numSteps,
         massMatrix,
       );
-
-      const h0 = hamiltonian(q0, momentum, logProb, massMatrix);
       const h1 = hamiltonian(q1, p1, logProb, massMatrix);
       const deltaH = h1.sub(h0).item();
       const acceptProb = Math.min(1, Math.exp(-deltaH));
@@ -81,7 +81,7 @@ describe("HMC detailed balance", () => {
       const meanDelta = binDeltaSum[i] / binCounts[i];
       const expected = Math.min(1, Math.exp(-meanDelta));
       const observed = binAccepts[i] / binCounts[i];
-      expect(observed).toBeCloseTo(expected, { tolerance: 0.1 });
+      expect(Math.abs(observed - expected)).toBeLessThan(0.1);
     }
   });
 });

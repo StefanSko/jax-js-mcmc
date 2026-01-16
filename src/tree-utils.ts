@@ -39,11 +39,11 @@ export function treeDivScalar<T extends JsTree<Array>>(a: T, scalar: number): T 
 }
 
 export function treeZerosLike<T extends JsTree<Array>>(a: T): T {
-  return mapTree((x: Array) => np.zerosLike(x), a) as T;
+  return mapTree((x: Array) => np.zerosLike(x.ref), a) as T;
 }
 
 export function treeOnesLike<T extends JsTree<Array>>(a: T): T {
-  return mapTree((x: Array) => np.onesLike(x), a) as T;
+  return mapTree((x: Array) => np.onesLike(x.ref), a) as T;
 }
 
 export function treeSqrt<T extends JsTree<Array>>(a: T): T {
@@ -84,9 +84,21 @@ export function treeDot(a: JsTree<Array>, b: JsTree<Array>): Array {
   }
   let acc = np.zeros([], { device: leavesA[0].device });
   for (let i = 0; i < leavesA.length; i++) {
-    acc = acc.add(np.sum(leavesA[i].mul(leavesB[i])));
+    acc = acc.add(np.sum(leavesA[i].ref.mul(leavesB[i].ref)));
   }
   return acc;
+}
+
+export function treeRef<T extends JsTree<Array>>(a: T): T {
+  return tree.ref(a) as T;
+}
+
+export function treeClone<T extends JsTree<Array>>(a: T): T {
+  return mapTree((x: Array) => x.ref.add(0), a) as T;
+}
+
+export function treeDispose<T extends JsTree<Array>>(a: T): void {
+  tree.dispose(a);
 }
 
 export function stackTrees<T extends JsTree<Array>>(

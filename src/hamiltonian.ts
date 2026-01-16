@@ -1,12 +1,12 @@
-import { numpy as np, Array, type JsTree } from "@jax-js/jax";
-import { mapTree, treeSum } from "./tree-utils";
+import { Array, type JsTree } from "@jax-js/jax";
+import { mapTree, treeClone, treeSum, treeRef } from "./tree-utils";
 
 export function kineticEnergy(
   momentum: JsTree<Array>,
   massMatrix: JsTree<Array>,
 ): Array {
   const scaled = mapTree(
-    (p: Array, m: Array) => p.mul(p).div(m),
+    (p: Array, m: Array) => p.mul(p.ref).div(m.ref),
     momentum,
     massMatrix,
   ) as JsTree<Array>;
@@ -19,7 +19,7 @@ export function hamiltonian<Params extends JsTree<Array>>(
   logProb: (p: Params) => Array,
   massMatrix: Params,
 ): Array {
-  const potential = logProb(position).mul(-1);
-  const kinetic = kineticEnergy(momentum, massMatrix);
+  const potential = logProb(treeClone(position)).mul(-1);
+  const kinetic = kineticEnergy(treeRef(momentum), massMatrix);
   return potential.add(kinetic);
 }

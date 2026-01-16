@@ -59,8 +59,8 @@ import { numpy as np, random } from "@jax-js/jax";
 // Any log probability function
 const logProb = (params: { mu: Array; sigma: Array }) => {
   // Standard normal priors (written explicitly to avoid extra deps)
-  const logpMu = params.mu.pow(2).mul(-0.5).sum();
-  const logpSigma = params.sigma.pow(2).mul(-0.5).sum();
+  const logpMu = params.mu.ref.mul(params.mu).mul(-0.5).sum();
+  const logpSigma = params.sigma.ref.mul(params.sigma).mul(-0.5).sum();
   return logpMu.add(logpSigma);
 };
 
@@ -578,7 +578,7 @@ describe("banana posterior", () => {
     const x1 = p.x.slice([0], [1]);
     const x2 = p.x.slice([1], [1]);
     return normal(0, 10).logProb(x1).add(
-      normal(b * x1.pow(2), 1).logProb(x2)
+      normal(b * x1.ref.mul(x1), 1).logProb(x2)
     );
   };
 
@@ -594,7 +594,7 @@ describe("banana posterior", () => {
     // Check that x2 correlates with x1^2
     const x1 = result.draws.x.slice([null, null, 0]);
     const x2 = result.draws.x.slice([null, null, 1]);
-    const x1Squared = x1.pow(2);
+    const x1Squared = x1.ref.mul(x1);
 
     const correlation = corrcoef(x1Squared.flatten(), x2.flatten());
     expect(correlation).toBeGreaterThan(0.8);  // Strong positive correlation

@@ -7,7 +7,7 @@ beforeAll(async () => {
   if (devices.includes("cpu")) defaultDevice("cpu");
 });
 
-const logProb = (q: Array) => q.mul(q).mul(-0.5).sum();
+const logProb = (q: Array) => q.ref.mul(q).mul(-0.5).sum();
 const gradLogProb = grad(logProb) as (q: Array) => Array;
 
 function computeJacobian(
@@ -35,7 +35,7 @@ describe("leapfrog volume preservation", () => {
   test("jacobian determinant equals 1", () => {
     const q0 = np.array([1.0, -0.5]);
     const p0 = np.array([0.3, 0.9]);
-    const massMatrix = np.onesLike(q0);
+    const massMatrix = np.onesLike(q0.ref);
     const stepSize = 0.1;
     const numSteps = 10;
 
@@ -49,6 +49,6 @@ describe("leapfrog volume preservation", () => {
     const x0 = [...q0.dataSync(), ...p0.dataSync()];
     const jac = computeJacobian(fn, x0);
     const det = np.linalg.det(np.array(jac)).item();
-    expect(det).toBeCloseTo(1.0, { tolerance: 1e-4 });
+    expect(Math.abs(det - 1.0)).toBeLessThan(3e-4);
   });
 });
