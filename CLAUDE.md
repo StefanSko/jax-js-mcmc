@@ -5,6 +5,14 @@
 jax-js-mcmc is a standalone HMC sampling library for jax-js (JAX in the browser).
 It provides MCMC inference for any differentiable log probability function.
 
+## CRITICAL: Read Before Implementing
+
+**Before writing any code, read these docs:**
+
+1. **[docs/JAX-JS-MEMORY.md](docs/JAX-JS-MEMORY.md)** - jax-js uses move semantics. Every operation consumes its inputs. You MUST understand `.ref` patterns or your code will fail with "tracer freed" errors.
+
+2. **[docs/DESIGN.md](docs/DESIGN.md)** - Full API specification, algorithm details, and test tolerances.
+
 ## Reference: jax-js
 
 This library builds on jax-js. Clone it for reference:
@@ -45,13 +53,13 @@ HMC correctness depends on Hamiltonian mechanics invariants:
 
 ```bash
 # Run physics tests only (must pass before anything else)
-pnpm test tests/physics
+npm test tests/physics
 
 # Run all tests
-pnpm test
+npm test
 
 # Run in browser (WebGPU)
-pnpm test:browser
+npm test:browser
 ```
 
 ### CI Enforcement
@@ -70,6 +78,7 @@ A PR cannot merge if physics tests fail.
 - Pure functions where possible
 - Match jax-js API conventions (e.g., `Array.add()` not `+`)
 - Use jax-js tree utilities for nested parameter structures
+- **Use `.ref` when arrays need to survive operations** (see JAX-JS-MEMORY.md)
 
 ## Key Files
 
@@ -80,3 +89,5 @@ A PR cannot merge if physics tests fail.
 - `tests/physics/` - Physics invariant tests (TDD foundation)
 - `tests/posteriors/` - Known analytical posteriors
 - `tests/reference/` - Blue/green tests against NumPyro
+- `docs/JAX-JS-MEMORY.md` - **Read this first** - memory management guide
+- `docs/DESIGN.md` - Full specification
