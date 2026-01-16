@@ -81,40 +81,48 @@ export function rhat(draws: number[][]): number {
  * @returns Effective sample size
  */
 export function ess(draws: number[][]): number {
-  // Flatten all chains
-  const allSamples = draws.flat();
-  const n = allSamples.length;
-  const sampleMean = mean(allSamples);
-  const sampleVariance = variance(allSamples, sampleMean);
-
-  if (sampleVariance < 1e-10) {
-    return n; // No variance, all samples are the same
-  }
-
-  // Compute autocorrelation up to maxLag
-  const maxLag = Math.min(n - 1, Math.floor(n / 2));
-  const rho: number[] = [];
-
-  for (let lag = 0; lag <= maxLag; lag++) {
-    let autocorr = 0;
-    for (let i = 0; i < n - lag; i++) {
-      autocorr += (allSamples[i] - sampleMean) * (allSamples[i + lag] - sampleMean);
+  const chainEss = draws.map((chain) => {
+    const n = chain.length;
+    if (n < 2) {
+      return n;
     }
-    rho.push(autocorr / (n * sampleVariance));
-  }
 
-  // Geyer's initial monotone sequence estimator
-  // Sum pairs of consecutive autocorrelations until they become negative
-  let essSum = rho[0];
-  for (let t = 1; t < maxLag - 1; t += 2) {
-    const pairSum = rho[t] + rho[t + 1];
-    if (pairSum < 0) {
-      break;
+    const sampleMean = mean(chain);
+    const sampleVariance = variance(chain, sampleMean);
+    if (sampleVariance < 1e-10) {
+      return n; // No variance, all samples are the same
     }
-    essSum += 2 * pairSum;
-  }
 
-  return Math.max(1, n / essSum);
+    // Convert sample variance (n-1) to population variance (n) for rho[0] = 1.
+    const varianceN = sampleVariance * ((n - 1) / n);
+
+    // Compute autocorrelation up to maxLag
+    const maxLag = Math.min(n - 1, Math.floor(n / 2));
+    const rho: number[] = [];
+
+    for (let lag = 0; lag <= maxLag; lag++) {
+      let autocorr = 0;
+      for (let i = 0; i < n - lag; i++) {
+        autocorr += (chain[i] - sampleMean) * (chain[i + lag] - sampleMean);
+      }
+      rho.push(autocorr / (n * varianceN));
+    }
+
+    // Geyer's initial monotone sequence estimator
+    // Sum pairs of consecutive autocorrelations until they become negative
+    let essSum = rho[0];
+    for (let t = 1; t < maxLag - 1; t += 2) {
+      const pairSum = rho[t] + rho[t + 1];
+      if (pairSum < 0) {
+        break;
+      }
+      essSum += 2 * pairSum;
+    }
+
+    return Math.max(1, n / essSum);
+  });
+
+  return chainEss.reduce((a, b) => a + b, 0);
 }
 
 /**
