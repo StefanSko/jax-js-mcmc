@@ -1,0 +1,38 @@
+{
+  "name": "jax-js-mcmc",
+  "version": "0.1.0",
+  "description": "HMC sampling library for jax-js",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:physics": "vitest run tests/physics",
+    "test:posteriors": "vitest run tests/posteriors",
+    "check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@jax-js/jax": ">=0.1.5"
+  },
+  "devDependencies": {
+    "@jax-js/jax": "^0.1.5",
+    "@types/node": "^20.0.0",
+    "@vitest/browser-playwright": "^4.0.9",
+    "playwright": "~1.52.0",
+    "typescript": "~5.9.3",
+    "vitest": "^4.0.9"
+  },
+  "keywords": [
+    "hmc",
+    "mcmc",
+    "bayesian",
+    "jax-js",
+    "sampling"
+  ],
+  "license": "MIT"
+}
