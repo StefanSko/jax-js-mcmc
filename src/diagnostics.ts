@@ -36,7 +36,7 @@ function computeRhatFlat(draws: Array): number[] {
   const half = nEven / 2;
   const paramShape = shape.slice(2);
   const paramSize = prod(paramShape.length ? paramShape : [1]);
-  const data = draws.dataSync();
+  const data = draws.ref.dataSync();
 
   if (nEven < 2 || m < 1) {
     return new Array(paramSize).fill(NaN);
@@ -92,7 +92,7 @@ function computeEssFlat(draws: Array): number[] {
   const n = shape[1];
   const paramShape = shape.slice(2);
   const paramSize = prod(paramShape.length ? paramShape : [1]);
-  const data = draws.dataSync();
+  const data = draws.ref.dataSync();
 
   const ess = new Array(paramSize).fill(0);
 
@@ -180,7 +180,7 @@ function summaryArray(draws: Array) {
   const n = shape[1];
   const paramShape = shape.slice(2);
   const paramSize = prod(paramShape.length ? paramShape : [1]);
-  const data = draws.dataSync();
+  const data = draws.ref.dataSync();
 
   const total = m * n;
   const means = new Array(paramSize).fill(0);

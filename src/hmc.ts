@@ -149,9 +149,20 @@ async function runChain<Params extends JsTree<Array>>(
       }
 
       if (iter === numWarmup - 1) {
-        stepSize = clampStepSize(Math.exp(dualState.logStepSizeAvg));
+        const tunedStepSize = clampStepSize(Math.exp(dualState.logStepSizeAvg));
         if (adaptMassMatrix) {
           massMatrix = finalizeMassMatrix(massState, massMatrix);
+          const stepInit = findReasonableStepSize(
+            logProb,
+            treeClone(position),
+            massMatrix,
+            tunedStepSize,
+            key,
+          );
+          key = stepInit.nextKey;
+          stepSize = stepInit.stepSize;
+        } else {
+          stepSize = tunedStepSize;
         }
       }
     } else {
