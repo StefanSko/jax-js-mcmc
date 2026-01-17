@@ -27,8 +27,9 @@ A vibe-engineered workflow using multiple agents through design, implementation,
 - Analyzed acceptance probability handling and step size adaptation
 
 ### [Claude Code #2.2](https://gisthost.github.io/?75d65e8029cc900b6c2e66131c0379ac/index.html)
-- Ran code-simplifier
-- Do PR #4
+- Explored jax-js API patterns and conventions
+- Created implementation plan with TDD approach
+- Started project setup
 
 ### [Codex #3](https://gistpreview.github.io/?5f6b8022e4572a7a886db872d7df98fb/index.html)
 - Let it run to check the plan from the brainstorming
@@ -102,7 +103,7 @@ Published session transcripts for reference.
 |---------|-------------|------------|
 | Claude Code #1 | Plan mode, memory/refs issues, JAX-JS-MEMORY.md (Lyon) | [gist](https://gisthost.github.io/?68f03be6c5d158c0276aa81356f82228/index.html) |
 | Claude Code #2 | HMC implementation, debugging memory/move semantics (Kyoto) | [gist](https://gisthost.github.io/?07d34dfbff597a129485d4da89ed1211/index.html) |
-| Claude Code #2.2 | Memory model investigation, documentation (Kyoto) | [gist](https://gisthost.github.io/?75d65e8029cc900b6c2e66131c0379ac/index.html) |
+| Claude Code #2.2 | jax-js API exploration, implementation plan, project setup (Kyoto) | [gist](https://gisthost.github.io/?75d65e8029cc900b6c2e66131c0379ac/index.html) |
 | Claude Code #6 | Code-simplifier on PR #4 (Kyoto) | [gist](https://gisthost.github.io/?e36e8fccd9809e35748750aac804bfed/index.html) |
 | Later work | PR #6 enhancements, code-simplifier | [gist](https://gisthost.github.io/?d20590487339a9cc0937e08bc40a2457/index.html) |
 
