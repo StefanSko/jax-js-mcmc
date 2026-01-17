@@ -10,28 +10,28 @@ A vibe-engineered workflow using multiple agents through design, implementation,
 
 - 2 worktrees via conductor
 
-### [Claude Code #1](https://gisthost.github.io/?68f03be6c5d158c0276aa81356f82228/index.html)
+### [Claude Code #1](https://gisthost.github.io/?68f03be6c5d158c0276aa81356f82228/index.html) *(Jan 16, 15:47–16:14 UTC)*
 - Plan mode
 - Claude Code went off rails with respect to memory and refs
 - Stopped and let it write a document about the issues, then restarted
 
-### [Claude Code #2](https://gisthost.github.io/?07d34dfbff597a129485d4da89ed1211/index.html)
+### [Claude Code #2](https://gisthost.github.io/?07d34dfbff597a129485d4da89ed1211/index.html) *(Jan 16, 16:16–16:26 UTC)*
 - Started to check it with the new memory doc and asked it to check `/tmp/blackjax`
 - Let it do the plan, then asked it again to check on `/tmp/blackjax` when it got stuck more explicitly
 - It got stuck, asked it to re-run, told it to add the deps to `.gitignore`
 
-### [Codex #2.1](https://gistpreview.github.io/?22deee051c7926f93037cd20fc70da99/index.html)
+### [Codex #2.1](https://gistpreview.github.io/?22deee051c7926f93037cd20fc70da99/index.html) *(Jan 16, 23:08–23:33 UTC)*
 - Ran `/review` against base branch `main`
 - Reviewed memory/ref handling in Welford updates
 - Found potential issues with slice function usage on 2D arrays
 - Analyzed acceptance probability handling and step size adaptation
 
-### [Claude Code #2.2](https://gisthost.github.io/?e36e8fccd9809e35748750aac804bfed/index.html)
+### [Claude Code #2.2](https://gisthost.github.io/?e36e8fccd9809e35748750aac804bfed/index.html) *(Jan 16, 22:57–23:08 UTC)*
 - Ran code-simplifier on PR #4
 - Extracted helper functions in leapfrog.ts, diagnostics.ts, hmc.ts
 - Commit `53c3704`
 
-### [Codex #3](https://gistpreview.github.io/?5f6b8022e4572a7a886db872d7df98fb/index.html)
+### [Codex #3](https://gistpreview.github.io/?5f6b8022e4572a7a886db872d7df98fb/index.html) *(Jan 16, 15:46–22:41 UTC)*
 - Let it run to check the plan from the brainstorming
 - Clarifying questions
 - Asked it to take suggested defaults and update the concrete design doc with that
@@ -47,7 +47,7 @@ A vibe-engineered workflow using multiple agents through design, implementation,
 - `JsTree` = nested object/array of Array leaves; use jax-js tree utilities for map/flatten
 - HMC options with defaults
 
-### [Codex #3.1](https://gistpreview.github.io/?d039f47a6bb9d9a361a65cd6aa1204a0/index.html)
+### [Codex #3.1](https://gistpreview.github.io/?d039f47a6bb9d9a361a65cd6aa1204a0/index.html) *(Jan 16, 22:54–23:25 UTC)*
 - Ran Codex `/review`, then fixed the found issues
 - Do PR #2
 
@@ -59,7 +59,7 @@ A vibe-engineered workflow using multiple agents through design, implementation,
 - Compare both PRs
 - Mentioned "Claude Code #2" as winner (Claude Code found Claude Code to be better)
 
-### [Codex #5](https://gistpreview.github.io/?fcd729f7e831fc0f70021e3e6c4c835c/index.html)
+### [Codex #5](https://gistpreview.github.io/?fcd729f7e831fc0f70021e3e6c4c835c/index.html) *(Jan 16, 22:25–23:41 UTC)*
 - Found "Codex #3" to be better
 - "Claude Code #2" had breaking changes, uses arrays instead of trees
 - Not reflecting the design doc
@@ -69,7 +69,7 @@ A vibe-engineered workflow using multiple agents through design, implementation,
 - Agreed, but mentioned better testing suite from "Claude Code #2"
 - Suggested: take "Codex #3" and cherry-pick some improvements from "Claude Code #2"
 
-### [Codex #5](https://gistpreview.github.io/?96f339ef48f2c1fbd33830169e129423/index.html)
+### [Codex #5](https://gistpreview.github.io/?96f339ef48f2c1fbd33830169e129423/index.html) *(Jan 16, 23:38 – Jan 17, 10:10 UTC)*
 - Passed on new suggestion from Claude Code #4
 - Mostly agreed, asked it to plan/implement
 - Went off to add the improvements from "Claude Code #2"
@@ -84,7 +84,7 @@ A vibe-engineered workflow using multiple agents through design, implementation,
   3. A multi-step trajectory check (e.g., final state near analytic after N steps)
 - Pushed commit and adapted PR
 
-### [Claude Code #6](https://gisthost.github.io/?d20590487339a9cc0937e08bc40a2457/index.html)
+### [Claude Code #6](https://gisthost.github.io/?d20590487339a9cc0937e08bc40a2457/index.html) *(Jan 17, 08:45–13:03 UTC)*
 - Ran code-simplifier on PR #6
 - Refactored physics test files
 - Commit `b704e81`
