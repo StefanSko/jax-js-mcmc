@@ -26,10 +26,10 @@ A vibe-engineered workflow using multiple agents through design, implementation,
 - Found potential issues with slice function usage on 2D arrays
 - Analyzed acceptance probability handling and step size adaptation
 
-### [Claude Code #2.2](https://gisthost.github.io/?75d65e8029cc900b6c2e66131c0379ac/index.html)
-- Explored jax-js API patterns and conventions
-- Created implementation plan with TDD approach
-- Started project setup
+### [Claude Code #2.2](https://gisthost.github.io/?e36e8fccd9809e35748750aac804bfed/index.html)
+- Ran code-simplifier on PR #4
+- Extracted helper functions in leapfrog.ts, diagnostics.ts, hmc.ts
+- Commit `53c3704`
 
 ### [Codex #3](https://gistpreview.github.io/?5f6b8022e4572a7a886db872d7df98fb/index.html)
 - Let it run to check the plan from the brainstorming
@@ -84,9 +84,10 @@ A vibe-engineered workflow using multiple agents through design, implementation,
   3. A multi-step trajectory check (e.g., final state near analytic after N steps)
 - Pushed commit and adapted PR
 
-### [Claude Code #6](https://gisthost.github.io/?e36e8fccd9809e35748750aac804bfed/index.html)
-- Ran a code-simplifier
-- Adapted PR
+### [Claude Code #6](https://gisthost.github.io/?d20590487339a9cc0937e08bc40a2457/index.html)
+- Ran code-simplifier on PR #6
+- Refactored physics test files
+- Commit `b704e81`
 
 ### Codex #5
 - `/review` no regrets, push and merge
@@ -103,9 +104,8 @@ Published session transcripts for reference.
 |---------|-------------|------------|
 | Claude Code #1 | Plan mode, memory/refs issues, JAX-JS-MEMORY.md (Lyon) | [gist](https://gisthost.github.io/?68f03be6c5d158c0276aa81356f82228/index.html) |
 | Claude Code #2 | HMC implementation, debugging memory/move semantics (Kyoto) | [gist](https://gisthost.github.io/?07d34dfbff597a129485d4da89ed1211/index.html) |
-| Claude Code #2.2 | jax-js API exploration, implementation plan, project setup (Kyoto) | [gist](https://gisthost.github.io/?75d65e8029cc900b6c2e66131c0379ac/index.html) |
-| Claude Code #6 | Code-simplifier on PR #4 (Kyoto) | [gist](https://gisthost.github.io/?e36e8fccd9809e35748750aac804bfed/index.html) |
-| Later work | PR #6 enhancements, code-simplifier | [gist](https://gisthost.github.io/?d20590487339a9cc0937e08bc40a2457/index.html) |
+| Claude Code #2.2 | Code-simplifier on PR #4 (Jan 16, 22:57 UTC) | [gist](https://gisthost.github.io/?e36e8fccd9809e35748750aac804bfed/index.html) |
+| Claude Code #6 | Code-simplifier on PR #6 (Jan 17, 08:45 UTC) | [gist](https://gisthost.github.io/?d20590487339a9cc0937e08bc40a2457/index.html) |
 
 ### Codex Sessions
 
