@@ -58,6 +58,8 @@ HMC correctness depends on Hamiltonian mechanics invariants:
 
 ### Test Commands
 
+Before running tests, install dependencies with `pnpm install`.
+
 ```bash
 # Run physics tests only (must pass before anything else)
 pnpm test tests/physics
