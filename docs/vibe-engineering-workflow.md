@@ -94,6 +94,32 @@ A vibe-engineered workflow using multiple agents through design, implementation,
 
 ---
 
+## Timeline
+
+```mermaid
+gantt
+    title Vibe Engineering Session Timeline (Jan 16-17, 2026 UTC)
+    dateFormat HH:mm
+    axisFormat %H:%M
+
+    section Claude Code
+    #1 Plan mode, memory docs     :cc1, 15:47, 27min
+    #2 HMC impl, debugging        :cc2, 16:16, 10min
+    #2.2 Code-simplifier PR#4     :cc22, 22:57, 11min
+    #6 Code-simplifier PR#6       :cc6, 08:45, 258min
+
+    section Codex
+    #3 Full HMC implementation    :cx3, 15:46, 415min
+    #5a Review, comparison        :cx5a, 22:25, 76min
+    #3.1 Review, bug fix          :cx31, 22:54, 31min
+    #2.1 ESS bugs review          :cx21, 23:08, 25min
+    #5b Cherry-pick, merge        :cx5b, 23:38, 632min
+```
+
+*Note: Claude Code #6 and Codex #5b times span into Jan 17. Chart shows relative durations.*
+
+---
+
 ## Transcripts
 
 Published session transcripts for reference.
