@@ -118,6 +118,17 @@ gantt
 
 *Note: Claude Code #6 and Codex #5b times span into Jan 17. Chart shows relative durations.*
 
+### Activity Timeline
+
+The Gantt chart above shows session durations, but actual activity was bursty. This plot shows when messages/events actually occurred:
+
+![Activity Timeline](timeline_activity.png)
+
+Key observations:
+- **Codex #3** ran for 7 hours but was mostly idle in the middle (waiting for user input)
+- **Late-night cluster** (22:00-00:00): intense parallel activity across multiple sessions
+- **Morning wrap-up** (08:00-10:00): Codex #5b and Claude Code #6 finishing work
+
 ---
 
 ## Transcripts
