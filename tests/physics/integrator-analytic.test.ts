@@ -43,7 +43,7 @@ describe("leapfrog analytic trajectory", () => {
 
     const { q, p } = runLeapfrog1D(0.0, 1.0, gradLogProb, stepSize, numSteps);
 
-    const qExpected = 0.0 + 1.0 * t - 0.5 * g * t * t;
+    const qExpected = t - 0.5 * g * t * t;
     const pExpected = 1.0 - g * t;
 
     expect(Math.abs(q - qExpected)).toBeLessThan(1e-2);

@@ -87,15 +87,14 @@ describe("leapfrog reversibility", () => {
     );
     const p2 = treeMulScalar(p2Neg, -1);
 
-    const qDiffX = np.max(np.abs(q2.x.sub(q0.x))).item();
-    const qDiffY = np.max(np.abs(q2.y.sub(q0.y))).item();
-    const pDiffX = np.max(np.abs(p2.x.sub(p0.x))).item();
-    const pDiffY = np.max(np.abs(p2.y.sub(p0.y))).item();
+    function maxDiff(a: Array, b: Array): number {
+      return np.max(np.abs(a.sub(b))).item();
+    }
 
-    expect(qDiffX).toBeLessThan(1e-5);
-    expect(qDiffY).toBeLessThan(1e-5);
-    expect(pDiffX).toBeLessThan(1e-5);
-    expect(pDiffY).toBeLessThan(1e-5);
+    expect(maxDiff(q2.x, q0.x)).toBeLessThan(1e-5);
+    expect(maxDiff(q2.y, q0.y)).toBeLessThan(1e-5);
+    expect(maxDiff(p2.x, p0.x)).toBeLessThan(1e-5);
+    expect(maxDiff(p2.y, p0.y)).toBeLessThan(1e-5);
   });
 
   test("reversibility with non-identity mass matrix", () => {

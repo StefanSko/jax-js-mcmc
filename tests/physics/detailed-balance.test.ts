@@ -31,26 +31,17 @@ function estimateAcceptRate(
   let numAccepted = 0;
 
   for (let i = 0; i < numTrials; i++) {
-    const keys = splitKeys(key, 4);
-    key = keys[3];
-    const qKey = keys[0];
-    const pKey = keys[1];
-    const acceptKey = keys[2];
+    const [qKey, pKey, acceptKey, nextKey] = splitKeys(key, 4);
+    key = nextKey;
 
     const q0 = random.normal(qKey, [dim]);
     const p0 = random.normal(pKey, [dim]);
     const massMatrix = np.onesLike(q0.ref);
 
     const h0 = hamiltonian(q0.ref, p0.ref, logProb, massMatrix);
-    const [q1, p1] = leapfrog(
-      q0.ref,
-      p0.ref,
-      gradLogProb,
-      stepSize,
-      numSteps,
-      massMatrix,
-    );
+    const [q1, p1] = leapfrog(q0, p0, gradLogProb, stepSize, numSteps, massMatrix);
     const h1 = hamiltonian(q1, p1, logProb, massMatrix);
+
     const deltaH = h1.sub(h0).item();
     const acceptProb = Math.min(1, Math.exp(-deltaH));
     const u = random.uniform(acceptKey).item();
@@ -61,6 +52,15 @@ function estimateAcceptRate(
   }
 
   return numAccepted / numTrials;
+}
+
+function findBin(value: number, edges: number[]): number {
+  for (let i = 0; i < edges.length - 1; i++) {
+    if (value >= edges[i] && value < edges[i + 1]) {
+      return i;
+    }
+  }
+  return edges.length - 1;
 }
 
 describe("HMC detailed balance", () => {
@@ -78,10 +78,8 @@ describe("HMC detailed balance", () => {
     const binDeltaSum = new Array(binEdges.length).fill(0);
 
     for (let i = 0; i < numTrials; i++) {
-      const keys = splitKeys(key, 3);
-      key = keys[0];
-      const momentumKey = keys[1];
-      const acceptKey = keys[2];
+      const [nextKey, momentumKey, acceptKey] = splitKeys(key, 3);
+      key = nextKey;
 
       const { sample: z } = sampleNormalTree(momentumKey, massMatrix);
       const momentum = mapTree(
@@ -92,27 +90,16 @@ describe("HMC detailed balance", () => {
 
       const q0 = q0Base.ref;
       const h0 = hamiltonian(q0Base.ref, momentum, logProb, massMatrix);
-      const [q1, p1] = leapfrog(
-        q0,
-        momentum,
-        gradLogProb,
-        stepSize,
-        numSteps,
-        massMatrix,
-      );
+      const [q1, p1] = leapfrog(q0, momentum, gradLogProb, stepSize, numSteps, massMatrix);
       const h1 = hamiltonian(q1, p1, logProb, massMatrix);
+
       const deltaH = h1.sub(h0).item();
       const acceptProb = Math.min(1, Math.exp(-deltaH));
       const u = random.uniform(acceptKey).item();
       const accepted = u < acceptProb;
 
       const delta = Math.max(0, deltaH);
-      let bin = binEdges.findIndex((edge, idx) =>
-        idx === binEdges.length - 1
-          ? delta >= edge
-          : delta >= edge && delta < binEdges[idx + 1],
-      );
-      if (bin === -1) bin = binEdges.length - 1;
+      const bin = findBin(delta, binEdges);
 
       binCounts[bin] += 1;
       binAccepts[bin] += accepted ? 1 : 0;
