@@ -41,6 +41,10 @@ SESSIONS = {
         "path": Path.home() / ".claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-kyoto/d87c1e7e-bfb3-473b-9f11-ec436618f965.jsonl",
         "type": "claude",
     },
+    "Claude Code #4": {
+        "path": Path.home() / ".claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-cairo/3d2b0069-5075-488e-9614-ad30db3f8c9b.jsonl",
+        "type": "claude",
+    },
     "Claude Code #6": {
         "path": Path.home() / ".claude/projects/-Users-stefansko-jax-js-mcmc/c2f46c1d-6ecd-4e41-a0af-d1ca3b2cf4e8.jsonl",
         "type": "claude",

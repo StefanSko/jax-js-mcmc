@@ -55,16 +55,18 @@ A vibe-engineered workflow using multiple agents through design, implementation,
 
 ## Review Phase
 
-### Claude Code #4
-- Compare both PRs
-- Mentioned "Claude Code #2" as winner (Claude Code found Claude Code to be better)
+### [Claude Code #4](https://gisthost.github.io/?0916a1550e2d826af740774384b23985/index.html) *(Jan 16, 23:35 – Jan 17, 14:32 UTC)*
+- Compare both PRs as Software Architect
+- Created PR-COMPARISON.md
+- Initially favored PR #4, revised to PR #2 after external review
+- Merged PR #2, created PR4-CHERRY-PICK-PLAN.md
 
 ### [Codex #5](https://gistpreview.github.io/?fcd729f7e831fc0f70021e3e6c4c835c/index.html) *(Jan 16, 22:25–23:41 UTC)*
 - Found "Codex #3" to be better
 - "Claude Code #2" had breaking changes, uses arrays instead of trees
 - Not reflecting the design doc
 
-### Claude Code #4
+### Claude Code #4 *(continued)*
 - Input from Codex #5
 - Agreed, but mentioned better testing suite from "Claude Code #2"
 - Suggested: take "Codex #3" and cherry-pick some improvements from "Claude Code #2"
@@ -106,6 +108,7 @@ gantt
     #1 Plan mode, memory docs     :cc1, 15:47, 27min
     #2 HMC impl, debugging        :cc2, 16:16, 10min
     #2.2 Code-simplifier PR#4     :cc22, 22:57, 11min
+    #4 PR comparison              :cc4, 23:35, 897min
     #6 Code-simplifier PR#6       :cc6, 08:45, 258min
 
     section Codex
@@ -116,7 +119,7 @@ gantt
     #5b Cherry-pick, merge        :cx5b, 23:38, 632min
 ```
 
-*Note: Claude Code #6 and Codex #5b times span into Jan 17. Chart shows relative durations.*
+*Note: Claude Code #4, #6 and Codex #5b times span into Jan 17. Chart shows relative durations.*
 
 ### Activity Timeline
 
@@ -142,6 +145,7 @@ Published session transcripts for reference.
 | Claude Code #1 | Plan mode, memory/refs issues, JAX-JS-MEMORY.md (Lyon) | [gist](https://gisthost.github.io/?68f03be6c5d158c0276aa81356f82228/index.html) |
 | Claude Code #2 | HMC implementation, debugging memory/move semantics (Kyoto) | [gist](https://gisthost.github.io/?07d34dfbff597a129485d4da89ed1211/index.html) |
 | Claude Code #2.2 | Code-simplifier on PR #4 (Jan 16, 22:57 UTC) | [gist](https://gisthost.github.io/?e36e8fccd9809e35748750aac804bfed/index.html) |
+| Claude Code #4 | PR comparison, PR-COMPARISON.md (Jan 16, 23:35 UTC) | [gist](https://gisthost.github.io/?0916a1550e2d826af740774384b23985/index.html) |
 | Claude Code #6 | Code-simplifier on PR #6 (Jan 17, 08:45 UTC) | [gist](https://gisthost.github.io/?d20590487339a9cc0937e08bc40a2457/index.html) |
 
 ### Codex Sessions
