@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 import { defaultDevice, init, numpy as np, grad, type Array } from "@jax-js/jax";
 import { leapfrog } from "../../src/leapfrog";
 import { hamiltonian } from "../../src/hamiltonian";
+import { treeOnesLike, treeRef } from "../../src/tree-utils";
 
 beforeAll(async () => {
   const devices = await init();
@@ -36,5 +37,52 @@ describe("leapfrog energy conservation", () => {
     const ratio2 = drifts[2] / drifts[1];
     expect(Math.abs(ratio1 - 0.25)).toBeLessThan(0.2);
     expect(Math.abs(ratio2 - 0.25)).toBeLessThan(0.2);
+  });
+
+  test("energy is conserved for small step sizes", () => {
+    const drift = measureEnergyDrift(0.01, 50);
+    expect(drift).toBeLessThan(1e-3);
+  });
+
+  test("energy conservation with pytree parameters", () => {
+    const logProb = (params: { x: Array; y: Array }) => {
+      const termX = params.x.ref.mul(params.x).mul(-0.5).sum();
+      const termY = params.y.ref.mul(params.y).mul(-1.0).sum();
+      return termX.add(termY);
+    };
+
+    const gradLogProb = (params: { x: Array; y: Array }) => ({
+      x: params.x.mul(-1),
+      y: params.y.mul(-2),
+    });
+
+    const q0 = { x: np.array([1.0, -0.5]), y: np.array([2.0]) };
+    const p0 = { x: np.array([0.3, 0.1]), y: np.array([-0.4]) };
+    const massMatrix = treeOnesLike(treeRef(q0));
+
+    const H0 = hamiltonian(
+      treeRef(q0),
+      treeRef(p0),
+      logProb,
+      massMatrix,
+    ).item();
+
+    const [q1, p1] = leapfrog(
+      treeRef(q0),
+      treeRef(p0),
+      gradLogProb,
+      0.02,
+      25,
+      massMatrix,
+    );
+
+    const H1 = hamiltonian(
+      treeRef(q1),
+      treeRef(p1),
+      logProb,
+      massMatrix,
+    ).item();
+
+    expect(Math.abs(H1 - H0)).toBeLessThan(1e-2);
   });
 });

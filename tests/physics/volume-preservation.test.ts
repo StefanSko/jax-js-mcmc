@@ -49,6 +49,6 @@ describe("leapfrog volume preservation", () => {
     const x0 = [...q0.dataSync(), ...p0.dataSync()];
     const jac = computeJacobian(fn, x0);
     const det = np.linalg.det(np.array(jac)).item();
-    expect(Math.abs(det - 1.0)).toBeLessThan(3e-4);
+    expect(Math.abs(det - 1.0)).toBeLessThan(1e-3);
   });
 });

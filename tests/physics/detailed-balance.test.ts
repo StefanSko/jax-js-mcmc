@@ -20,6 +20,49 @@ beforeAll(async () => {
 const logProb = (q: Array) => q.ref.mul(q).mul(-0.5).sum();
 const gradLogProb = grad(logProb) as (q: Array) => Array;
 
+function estimateAcceptRate(
+  stepSize: number,
+  numSteps: number,
+  numTrials: number,
+  keySeed: number,
+  dim: number,
+): number {
+  let key = random.key(keySeed);
+  let numAccepted = 0;
+
+  for (let i = 0; i < numTrials; i++) {
+    const keys = splitKeys(key, 4);
+    key = keys[3];
+    const qKey = keys[0];
+    const pKey = keys[1];
+    const acceptKey = keys[2];
+
+    const q0 = random.normal(qKey, [dim]);
+    const p0 = random.normal(pKey, [dim]);
+    const massMatrix = np.onesLike(q0.ref);
+
+    const h0 = hamiltonian(q0.ref, p0.ref, logProb, massMatrix);
+    const [q1, p1] = leapfrog(
+      q0.ref,
+      p0.ref,
+      gradLogProb,
+      stepSize,
+      numSteps,
+      massMatrix,
+    );
+    const h1 = hamiltonian(q1, p1, logProb, massMatrix);
+    const deltaH = h1.sub(h0).item();
+    const acceptProb = Math.min(1, Math.exp(-deltaH));
+    const u = random.uniform(acceptKey).item();
+
+    if (u < acceptProb) {
+      numAccepted++;
+    }
+  }
+
+  return numAccepted / numTrials;
+}
+
 describe("HMC detailed balance", () => {
   test("acceptance probability follows Metropolis rule", () => {
     const numTrials = 5000;
@@ -83,5 +126,26 @@ describe("HMC detailed balance", () => {
       const observed = binAccepts[i] / binCounts[i];
       expect(Math.abs(observed - expected)).toBeLessThan(0.1);
     }
+  });
+
+  test("acceptance rate decreases with larger step sizes", () => {
+    const stepSizes = [0.1, 0.5, 1.0];
+    const numTrials = 300;
+    const numSteps = 25;
+
+    const rates = stepSizes.map((stepSize, idx) =>
+      estimateAcceptRate(stepSize, numSteps, numTrials, 123 + idx, 2),
+    );
+
+    expect(rates[0]).toBeGreaterThanOrEqual(rates[1] - 0.05);
+    expect(rates[1]).toBeGreaterThan(rates[2]);
+  });
+
+  test("long trajectories maintain reasonable acceptance", () => {
+    const rateShort = estimateAcceptRate(0.1, 10, 200, 777, 2);
+    const rateLong = estimateAcceptRate(0.1, 50, 200, 888, 2);
+
+    expect(rateShort).toBeGreaterThan(0.5);
+    expect(rateLong).toBeGreaterThan(0.4);
   });
 });
