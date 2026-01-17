@@ -4,7 +4,7 @@ Hamiltonian Monte Carlo (HMC) for [jax-js](https://github.com/ekzhang/jax-js): B
 
 ## Status
 
-**Alpha** — core HMC + diagnostics are implemented, but the API may change. See `docs/DESIGN.md` for the full spec and `docs/TESTING.md` for the test suite and motivations.
+**Alpha** — core HMC + diagnostics are implemented, but the API may change. See `docs/DESIGN.md` for the full spec, `docs/TESTING.md` for the test suite, and `docs/vibe-engineering-workflow.md` for the design-phase workflow.
 
 ## Features (v1)
 
