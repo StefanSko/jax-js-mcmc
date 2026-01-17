@@ -1,0 +1,35 @@
+{
+  "title": "Transcript Publishing Sessions",
+  "output_dir": "./docs",
+  "output_name": "timeline_activity_publish_2026-01-17",
+  "sessions": {
+    "Claude Code #7": {
+      "path": "/Users/stefansko/.claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-davis/3d833d6e-8ad0-4e52-8613-75da89d4a2cd.jsonl",
+      "type": "claude"
+    },
+    "Claude Code #8": {
+      "path": "/Users/stefansko/.claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-davis/40dbc180-bce6-41c4-9287-5334ad415eba.jsonl",
+      "type": "claude"
+    },
+    "Claude Code #9": {
+      "path": "/Users/stefansko/.claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-davis/daa89dd1-ab86-470c-bf28-0d3058c569a4.jsonl",
+      "type": "claude"
+    },
+    "CC Subagent A": {
+      "path": "/Users/stefansko/.claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-davis/daa89dd1-ab86-470c-bf28-0d3058c569a4/subagents/agent-a23a2e9.jsonl",
+      "type": "claude"
+    },
+    "CC Subagent B": {
+      "path": "/Users/stefansko/.claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-davis/daa89dd1-ab86-470c-bf28-0d3058c569a4/subagents/agent-a816950.jsonl",
+      "type": "claude"
+    },
+    "CC Subagent C": {
+      "path": "/Users/stefansko/.claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-davis/daa89dd1-ab86-470c-bf28-0d3058c569a4/subagents/agent-abfff01.jsonl",
+      "type": "claude"
+    },
+    "Codex #6": {
+      "path": "/Users/stefansko/.codex/sessions/2026/01/17/rollout-2026-01-17T16-51-34-019bcca7-99f1-7d61-b41e-8f00f022f6ce.jsonl",
+      "type": "codex"
+    }
+  }
+}
