@@ -18,6 +18,19 @@ Refer to /tmp/jax-js/src for:
 - How grad/jit/vmap work
 - Random number generation patterns
 
+## Types and Conventions
+
+- `JsTree<Array>` means any nested object/array structure whose leaves are jax-js `Array` values.
+- `logProb(params)` must return a scalar (0-dim) `Array` in float32 (not a JS number).
+- `initialParams`, `key`, and `numSamples` are required inputs to `hmc`.
+- Tests assume float32 behavior (WebGPU/WASM); tolerances reflect this.
+
+## Adaptation Defaults (v1)
+
+- Dual averaging per chain with `gamma = 0.05`, `t0 = 10`, `kappa = 0.75`, `mu = log(10 * initialStepSize)`.
+- Step size init heuristic: start `initialStepSize`, double if acceptProb > 0.8, halve if < 0.2, clamp to `[1e-4, 1]`.
+- Diagonal mass matrix with Welford variance during warmup only, jitter `+ 1e-5`, freeze after warmup.
+
 ## MANDATORY: Physics-Based TDD
 
 This project follows strict physics-based TDD. You MUST NOT skip these steps.
