@@ -13,52 +13,47 @@ import matplotlib.dates as mdates
 from matplotlib.patches import Patch
 import numpy as np
 
+# Colors for each agent type
+CLAUDE_COLOR = "#6366f1"  # indigo
+CODEX_COLOR = "#f97316"   # orange
+
 # Session definitions with their transcript paths and metadata
 SESSIONS = {
     "Claude Code #1": {
         "path": Path.home() / ".claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-lyon/0b9b0665-46df-40fd-b2d0-10df07d451b3.jsonl",
         "type": "claude",
-        "color": "#6366f1",  # indigo
     },
     "Claude Code #2": {
         "path": Path.home() / ".claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-kyoto/4045d60b-5016-4c3b-b25d-9174ef216086.jsonl",
         "type": "claude",
-        "color": "#8b5cf6",  # violet
     },
     "Claude Code #2.2": {
         "path": Path.home() / ".claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-kyoto/d87c1e7e-bfb3-473b-9f11-ec436618f965.jsonl",
         "type": "claude",
-        "color": "#a78bfa",  # light violet
     },
     "Claude Code #6": {
         "path": Path.home() / ".claude/projects/-Users-stefansko-jax-js-mcmc/c2f46c1d-6ecd-4e41-a0af-d1ca3b2cf4e8.jsonl",
         "type": "claude",
-        "color": "#c4b5fd",  # lighter violet
     },
     "Codex #2.1": {
         "path": Path.home() / ".codex/sessions/2026/01/17/rollout-2026-01-17T00-08-07-019bc910-e873-7f91-b5e9-659c99dfa485.jsonl",
         "type": "codex",
-        "color": "#f97316",  # orange
     },
     "Codex #3": {
         "path": Path.home() / ".codex/sessions/2026/01/16/rollout-2026-01-16T16-46-56-019bc77d-000e-7252-99f9-f3d45926c791.jsonl",
         "type": "codex",
-        "color": "#fb923c",  # light orange
     },
     "Codex #3.1": {
         "path": Path.home() / ".codex/sessions/2026/01/16/rollout-2026-01-16T23-53-58-019bc903-f3de-71f0-bbff-67bd1983c4b3.jsonl",
         "type": "codex",
-        "color": "#fdba74",  # lighter orange
     },
     "Codex #5a": {
         "path": Path.home() / ".codex/sessions/2026/01/16/rollout-2026-01-16T23-25-23-019bc8e9-c9b9-7b80-9906-aed4c2a8027b.jsonl",
         "type": "codex",
-        "color": "#fed7aa",  # lightest orange
     },
     "Codex #5b": {
         "path": Path.home() / ".codex/sessions/2026/01/17/rollout-2026-01-17T00-38-20-019bc92c-9234-7c31-b59e-0937c69da930.jsonl",
         "type": "codex",
-        "color": "#ffedd5",  # cream
     },
 }
 
@@ -158,12 +153,12 @@ def create_activity_plot(sessions_data, output_path):
             continue
 
         y_pos = y_positions[name]
-        color = data['color']
+        color = CLAUDE_COLOR if data['type'] == 'claude' else CODEX_COLOR
 
         # Plot individual events as small vertical lines
         for ts in timestamps:
             ax.plot([ts, ts], [y_pos - 0.35, y_pos + 0.35],
-                   color=color, alpha=0.5, linewidth=0.3)
+                   color=color, alpha=0.6, linewidth=0.5)
 
         # Add density plot (activity intensity)
         if len(timestamps) > 1:
@@ -196,7 +191,7 @@ def create_activity_plot(sessions_data, output_path):
         if not timestamps:
             continue
         y_pos = y_positions[name]
-        color = data['color']
+        color = CLAUDE_COLOR if data['type'] == 'claude' else CODEX_COLOR
         ax.text(max_time + np.timedelta64(5, 'm'), y_pos, name,
                fontsize=9, fontweight='bold', color=color, va='center')
 
@@ -262,7 +257,6 @@ def main():
         sessions_data[name] = {
             'timestamps': timestamps,
             'type': info['type'],
-            'color': info['color'],
         }
 
     output_dir = Path(__file__).parent.parent / "docs"
