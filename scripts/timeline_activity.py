@@ -2,6 +2,16 @@
 """
 Generate activity timeline visualization from Claude Code and Codex transcripts.
 Shows when actual messages/events occurred, not just session start/end times.
+
+Usage:
+    uv run --with matplotlib --with numpy scripts/timeline_activity.py
+
+Output:
+    docs/timeline_activity.png
+    docs/timeline_activity.svg
+
+The script reads JSONL transcript files from ~/.claude and ~/.codex directories,
+extracts timestamps, and creates a visualization showing actual activity patterns.
 """
 
 import json
