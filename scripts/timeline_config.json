@@ -1,0 +1,46 @@
+{
+    "title": "Vibe Engineering Activity Timeline",
+    "output_dir": "../docs",
+    "sessions": {
+        "Claude Code #1": {
+            "path": "~/.claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-lyon/0b9b0665-46df-40fd-b2d0-10df07d451b3.jsonl",
+            "type": "claude"
+        },
+        "Claude Code #2": {
+            "path": "~/.claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-kyoto/4045d60b-5016-4c3b-b25d-9174ef216086.jsonl",
+            "type": "claude"
+        },
+        "Claude Code #2.2": {
+            "path": "~/.claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-kyoto/d87c1e7e-bfb3-473b-9f11-ec436618f965.jsonl",
+            "type": "claude"
+        },
+        "Claude Code #4": {
+            "path": "~/.claude/projects/-Users-stefansko-conductor-workspaces-jax-js-mcmc-cairo/3d2b0069-5075-488e-9614-ad30db3f8c9b.jsonl",
+            "type": "claude"
+        },
+        "Claude Code #6": {
+            "path": "~/.claude/projects/-Users-stefansko-jax-js-mcmc/c2f46c1d-6ecd-4e41-a0af-d1ca3b2cf4e8.jsonl",
+            "type": "claude"
+        },
+        "Codex #2.1": {
+            "path": "~/.codex/sessions/2026/01/17/rollout-2026-01-17T00-08-07-019bc910-e873-7f91-b5e9-659c99dfa485.jsonl",
+            "type": "codex"
+        },
+        "Codex #3": {
+            "path": "~/.codex/sessions/2026/01/16/rollout-2026-01-16T16-46-56-019bc77d-000e-7252-99f9-f3d45926c791.jsonl",
+            "type": "codex"
+        },
+        "Codex #3.1": {
+            "path": "~/.codex/sessions/2026/01/16/rollout-2026-01-16T23-53-58-019bc903-f3de-71f0-bbff-67bd1983c4b3.jsonl",
+            "type": "codex"
+        },
+        "Codex #5a": {
+            "path": "~/.codex/sessions/2026/01/16/rollout-2026-01-16T23-25-23-019bc8e9-c9b9-7b80-9906-aed4c2a8027b.jsonl",
+            "type": "codex"
+        },
+        "Codex #5b": {
+            "path": "~/.codex/sessions/2026/01/17/rollout-2026-01-17T00-38-20-019bc92c-9234-7c31-b59e-0937c69da930.jsonl",
+            "type": "codex"
+        }
+    }
+}

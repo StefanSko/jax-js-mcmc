@@ -4,6 +4,10 @@ Generate activity timeline visualization from Claude Code and Codex transcripts.
 Shows when actual messages/events occurred, not just session start/end times.
 
 Usage:
+    # With config file (recommended for reuse)
+    uv run --with matplotlib --with numpy scripts/timeline_activity.py timeline_config.json
+
+    # Without config (uses hardcoded SESSIONS below)
     uv run --with matplotlib --with numpy scripts/timeline_activity.py
 
 Output:
@@ -15,9 +19,9 @@ extracts timestamps, and creates a visualization showing actual activity pattern
 """
 
 import json
+import sys
 from pathlib import Path
 from datetime import datetime
-from collections import defaultdict
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.patches import Patch
@@ -118,7 +122,7 @@ def extract_timestamps(path):
     return sorted(timestamps)
 
 
-def create_activity_plot(sessions_data, output_path):
+def create_activity_plot(sessions_data, output_path, title="Session Activity Timeline"):
     """Create activity timeline visualization."""
     fig, ax = plt.subplots(figsize=(16, 8))
 
@@ -222,9 +226,13 @@ def create_activity_plot(sessions_data, output_path):
     ax.xaxis.set_minor_locator(mdates.MinuteLocator(interval=30))
 
     plt.xticks(rotation=0)
-    ax.set_xlabel('Time (UTC) — Jan 16-17, 2026', fontsize=11)
+    # Dynamic date label
+    date_str = min_time.strftime('%b %d')
+    if min_time.date() != max_time.date():
+        date_str = f"{min_time.strftime('%b %d')}-{max_time.strftime('%d')}"
+    ax.set_xlabel(f'Time (UTC) — {date_str}, {min_time.year}', fontsize=11)
     ax.set_ylabel('')
-    ax.set_title('Vibe Engineering Activity Timeline\nActual message/event activity (vertical lines = events, shading = intensity)',
+    ax.set_title(f'{title}\nActual message/event activity (vertical lines = events, shading = intensity)',
                 fontsize=13, fontweight='bold', pad=15)
 
     # Remove y-axis ticks
@@ -260,11 +268,41 @@ def create_activity_plot(sessions_data, output_path):
     plt.close()
 
 
+def load_config(config_path):
+    """Load sessions from a JSON config file."""
+    with open(config_path) as f:
+        config = json.load(f)
+    return config
+
+
 def main():
+    # Check for config file argument
+    if len(sys.argv) > 1:
+        config_path = Path(sys.argv[1])
+        if config_path.exists():
+            print(f"Loading config from {config_path}...")
+            config = load_config(config_path)
+            sessions = config.get('sessions', {})
+            title = config.get('title', 'Session Activity Timeline')
+            output_dir = Path(config.get('output_dir', '.')).expanduser()
+            # Resolve relative paths from config file location
+            if not output_dir.is_absolute():
+                output_dir = config_path.parent / output_dir
+        else:
+            print(f"Config file not found: {config_path}")
+            print("Using hardcoded SESSIONS...")
+            sessions = SESSIONS
+            title = "Vibe Engineering Activity Timeline"
+            output_dir = Path(__file__).parent.parent / "docs"
+    else:
+        sessions = SESSIONS
+        title = "Vibe Engineering Activity Timeline"
+        output_dir = Path(__file__).parent.parent / "docs"
+
     print("Extracting timestamps from transcripts...")
 
     sessions_data = {}
-    for name, info in SESSIONS.items():
+    for name, info in sessions.items():
         print(f"  Processing {name}...")
         timestamps = extract_timestamps(info['path'])
         print(f"    Found {len(timestamps)} events")
@@ -273,11 +311,11 @@ def main():
             'type': info['type'],
         }
 
-    output_dir = Path(__file__).parent.parent / "docs"
+    output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "timeline_activity.png"
 
     print("\nCreating visualization...")
-    create_activity_plot(sessions_data, output_path)
+    create_activity_plot(sessions_data, output_path, title)
 
     print("\nDone!")
 
